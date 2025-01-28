@@ -58,60 +58,74 @@ def create_accounts():
     )
 
 ######################################################################
+# READ AN ACCOUNT
+######################################################################
+@app.route("/accounts/<int:account_id>", methods=["GET"])
+def get_accounts(account_id):
+    """
+    Reads an Account
+    This endpoint will read an Account based the account_id that is requested
+    """
+    app.logger.info("Request to read an Account with id: %s", account_id)
+
+    account = Account.find(account_id)
+    if not account:
+        abort(status.HTTP_404_NOT_FOUND, f"Account with id [{account_id}] could not be found.")
+
+    return account.serialize(), status.HTTP_200_OK
+
+######################################################################
 # LIST ALL ACCOUNTS
 ######################################################################
 @app.route("/accounts", methods=["GET"])
 def list_accounts():
-    """List all Accounts"""
-    app.logger.info("Request to list all Accounts")
-    accounts = Account.query.all()
-    return jsonify([account.serialize() for account in accounts]), status.HTTP_200_OK
+    """
+    List all Accounts
+    This endpoint will list all Accounts
+    """
+    app.logger.info("Request to list Accounts")
 
-######################################################################
-# READ AN ACCOUNT
-######################################################################
-@app.route("/accounts/<int:account_id>", methods=["GET"])
-def get_account(account_id):
-    """Read an Account"""
-    app.logger.info(f"Request to read Account with ID {account_id}")
-    account = Account.query.get(account_id)
-    
-    if not account:
-        abort(status.HTTP_404_NOT_FOUND, f"Account with ID {account_id} not found")
-    
-    return jsonify(account.serialize()), status.HTTP_200_OK
+    accounts = Account.all()
+    account_list = [account.serialize() for account in accounts]
+
+    app.logger.info("Returning [%s] accounts", len(account_list))
+    return jsonify(account_list), status.HTTP_200_OK
 
 ######################################################################
 # UPDATE AN EXISTING ACCOUNT
 ######################################################################
 @app.route("/accounts/<int:account_id>", methods=["PUT"])
-def update_account(account_id):
-    """Update an existing Account"""
-    app.logger.info(f"Request to update Account with ID {account_id}")
-    account = Account.query.get(account_id)
+def update_accounts(account_id):
+    """
+    Update an Account
+    This endpoint will update an Account based on the posted data
+    """
+    app.logger.info("Request to update an Account with id: %s", account_id)
 
+    account = Account.find(account_id)
     if not account:
-        abort(status.HTTP_404_NOT_FOUND, f"Account with ID {account_id} not found")
+        abort(status.HTTP_404_NOT_FOUND, f"Account with id [{account_id}] could not be found.")
 
-    account_data = request.get_json()
-    account.deserialize(account_data)  # Deserialize the request data into the account model
-    account.update()  # Save the changes
+    account.deserialize(request.get_json())
+    account.update()
 
-    return jsonify(account.serialize()), status.HTTP_200_OK
+    return account.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # DELETE AN ACCOUNT
 ######################################################################
 @app.route("/accounts/<int:account_id>", methods=["DELETE"])
-def delete_account(account_id):
-    """Delete an Account"""
-    app.logger.info(f"Request to delete Account with ID {account_id}")
-    account = Account.query.get(account_id)
+def delete_accounts(account_id):
+    """
+    Delete an Account
+    This endpoint will delete an Account based on the account_id that is requested
+    """
+    app.logger.info("Request to delete an Account with id: %s", account_id)
 
-    if not account:
-        abort(status.HTTP_404_NOT_FOUND, f"Account with ID {account_id} not found")
+    account = Account.find(account_id)
+    if account:
+        account.delete()
 
-    account.delete()  # Delete the account from the database
     return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
